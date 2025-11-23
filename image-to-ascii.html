@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASCII Art Converter - Smart Background Removal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: #7f8c8d;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .upload-btn {
+            width: 100%;
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: background 0.3s;
+        }
+
+        .upload-btn:hover {
+            background: #2980b9;
+        }
+
+        .controls {
+            margin-top: 1.5rem;
+        }
+
+        .control-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .weight-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .weight-btn {
+            flex: 1;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #ecf0f1;
+            color: #2c3e50;
+        }
+
+        .weight-btn.active {
+            background: #3498db;
+            color: white;
+        }
+
+        .weight-btn:hover:not(.active) {
+            background: #d5dbdb;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            height: 6px;
+            border-radius: 3px;
+            background: #ecf0f1;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #3498db;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #3498db;
+            cursor: pointer;
+            border: none;
+        }
+
+        .threshold-value {
+            min-width: 50px;
+            text-align: center;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .mode-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 0.75rem;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+            color: #2c3e50;
+        }
+
+        .mode-btn.active {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+
+        .mode-btn:hover:not(.active) {
+            background: #f8f9fa;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .result-header h2 {
+            font-size: 1.5rem;
+            color: #2c3e50;
+        }
+
+        .download-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background 0.3s;
+        }
+
+        .download-btn:hover {
+            background: #229954;
+        }
+
+        .ascii-container {
+            background: white;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            padding: 1.5rem;
+            overflow: auto;
+            max-height: 600px;
+        }
+
+        .ascii-art {
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            line-height: 1.2;
+            white-space: pre;
+            color: black;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .preview-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .preview-box {
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            background: repeating-conic-gradient(#f0f0f0 0% 25%, transparent 0% 50%) 50% / 20px 20px;
+        }
+
+        .preview-box h3 {
+            font-size: 0.875rem;
+            color: #7f8c8d;
+            margin-bottom: 0.5rem;
+            background: white;
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .preview-box canvas {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .info-text {
+            font-size: 0.75rem;
+            color: #7f8c8d;
+            margin-top: 0.5rem;
+        }
+
+        .color-picker-container {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin-top: 0.5rem;
+        }
+
+        .color-picker {
+            width: 50px;
+            height: 50px;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .pick-color-btn {
+            padding: 0.5rem 1rem;
+            background: #9b59b6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .pick-color-btn:hover {
+            background: #8e44ad;
+        }
+
+        .pick-color-btn.active {
+            background: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ASCII Art Converter</h1>
+        <p class="subtitle">Transform your images into ASCII art with smart background removal</p>
+
+        <div class="card">
+            <input type="file" id="fileInput" accept="image/*" class="hidden">
+            <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                Upload Image
+            </button>
+
+            <div class="controls" id="controls" style="display: none;">
+                <div class="control-group">
+                    <label>Background Removal Mode</label>
+                    <div class="mode-buttons">
+                        <button class="mode-btn active" data-mode="edges" onclick="changeMode('edges')">Edge Detection</button>
+                        <button class="mode-btn" data-mode="color" onclick="changeMode('color')">Color Match</button>
+                    </div>
+                </div>
+
+                <div class="control-group" id="edgeControls">
+                    <label>Edge Detection Sensitivity</label>
+                    <div class="slider-container">
+                        <input type="range" id="edgeThreshold" min="5" max="50" value="20" oninput="updateEdgeThreshold(this.value)">
+                        <span class="threshold-value" id="edgeValue">20</span>
+                    </div>
+                    <p class="info-text">Higher values keep more of the subject, lower values remove more background.</p>
+                </div>
+
+                <div class="control-group hidden" id="colorControls">
+                    <label>Background Color to Remove</label>
+                    <div class="color-picker-container">
+                        <input type="color" id="bgColor" class="color-picker" value="#ffffff" onchange="updateColor()">
+                        <button class="pick-color-btn" id="pickColorBtn" onclick="toggleColorPicker()">
+                            Click Image to Pick Color
+                        </button>
+                    </div>
+                    <div class="slider-container" style="margin-top: 0.5rem;">
+                        <span style="font-size: 0.75rem; min-width: 80px;">Tolerance:</span>
+                        <input type="range" id="colorTolerance" min="0" max="100" value="30" oninput="updateColorTolerance(this.value)">
+                        <span class="threshold-value" id="toleranceValue">30</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>Character Weight</label>
+                    <div class="weight-buttons">
+                        <button class="weight-btn active" data-weight="light" onclick="changeWeight('light')">Light</button>
+                        <button class="weight-btn" data-weight="medium" onclick="changeWeight('medium')">Medium</button>
+                        <button class="weight-btn" data-weight="heavy" onclick="changeWeight('heavy')">Heavy</button>
+                    </div>
+                </div>
+
+                <div class="preview-container">
+                    <div class="preview-box">
+                        <h3>Original</h3>
+                        <canvas id="originalCanvas"></canvas>
+                    </div>
+                    <div class="preview-box">
+                        <h3>Background Removed</h3>
+                        <canvas id="processedCanvas"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" id="resultCard" style="display: none;">
+            <div class="result-header">
+                <h2>ASCII Result</h2>
+                <button class="download-btn" onclick="downloadAsImage()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Download
+                </button>
+            </div>
+            <div class="ascii-container">
+                <div class="ascii-art" id="asciiArt"></div>
+            </div>
+        </div>
+    </div>
+
+    <canvas id="downloadCanvas" class="hidden"></canvas>
+
+    <script>
+        let currentImage = null;
+        let currentWeight = 'light';
+        let currentMode = 'edges';
+        let edgeThreshold = 20;
+        let bgColor = { r: 255, g: 255, b: 255 };
+        let colorTolerance = 30;
+        let pickingColor = false;
+
+        const weights = {
+            light: ' .:-=+*#%@',
+            medium: ' .:;+=xX$&#',
+            heavy: ' ░▒▓█'
+        };
+
+        document.getElementById('fileInput').addEventListener('change', handleImageUpload);
+
+        function handleImageUpload(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.onload = function() {
+                        currentImage = img;
+                        document.getElementById('controls').style.display = 'block';
+                        processImage();
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function changeMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
+            
+            if (mode === 'edges') {
+                document.getElementById('edgeControls').classList.remove('hidden');
+                document.getElementById('colorControls').classList.add('hidden');
+            } else {
+                document.getElementById('edgeControls').classList.add('hidden');
+                document.getElementById('colorControls').classList.remove('hidden');
+            }
+            
+            if (currentImage) {
+                processImage();
+            }
+        }
+
+        function changeWeight(weight) {
+            currentWeight = weight;
+            document.querySelectorAll('.weight-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-weight="${weight}"]`).classList.add('active');
+            if (currentImage) {
+                processImage();
+            }
+        }
+
+        function updateEdgeThreshold(value) {
+            edgeThreshold = parseInt(value);
+            document.getElementById('edgeValue').textContent = value;
+            if (currentImage && currentMode === 'edges') {
+                processImage();
+            }
+        }
+
+        function updateColor() {
+            const color = document.getElementById('bgColor').value;
+            bgColor.r = parseInt(color.substr(1, 2), 16);
+            bgColor.g = parseInt(color.substr(3, 2), 16);
+            bgColor.b = parseInt(color.substr(5, 2), 16);
+            if (currentImage && currentMode === 'color') {
+                processImage();
+            }
+        }
+
+        function updateColorTolerance(value) {
+            colorTolerance = parseInt(value);
+            document.getElementById('toleranceValue').textContent = value;
+            if (currentImage && currentMode === 'color') {
+                processImage();
+            }
+        }
+
+        function toggleColorPicker() {
+            pickingColor = !pickingColor;
+            const btn = document.getElementById('pickColorBtn');
+            if (pickingColor) {
+                btn.textContent = 'Click Image to Pick (Active)';
+                btn.classList.add('active');
+                document.getElementById('originalCanvas').style.cursor = 'crosshair';
+            } else {
+                btn.textContent = 'Click Image to Pick Color';
+                btn.classList.remove('active');
+                document.getElementById('originalCanvas').style.cursor = 'default';
+            }
+        }
+
+        document.getElementById('originalCanvas').addEventListener('click', function(e) {
+            if (!pickingColor || !currentImage) return;
+            
+            const rect = this.getBoundingClientRect();
+            const x = Math.floor((e.clientX - rect.left) * (this.width / rect.width));
+            const y = Math.floor((e.clientY - rect.top) * (this.height / rect.height));
+            
+            const ctx = this.getContext('2d');
+            const pixel = ctx.getImageData(x, y, 1, 1).data;
+            
+            bgColor.r = pixel[0];
+            bgColor.g = pixel[1];
+            bgColor.b = pixel[2];
+            
+            const hexColor = '#' + [pixel[0], pixel[1], pixel[2]].map(x => x.toString(16).padStart(2, '0')).join('');
+            document.getElementById('bgColor').value = hexColor;
+            
+            toggleColorPicker();
+            processImage();
+        });
+
+        function processImage() {
+            const img = currentImage;
+            const originalCanvas = document.getElementById('originalCanvas');
+            const processedCanvas = document.getElementById('processedCanvas');
+            
+            const maxPreviewWidth = 400;
+            const scale = maxPreviewWidth / img.width;
+            originalCanvas.width = img.width * scale;
+            originalCanvas.height = img.height * scale;
+            
+            const originalCtx = originalCanvas.getContext('2d');
+            originalCtx.drawImage(img, 0, 0, originalCanvas.width, originalCanvas.height);
+            
+            // Process image for ASCII
+            const tempCanvas = document.createElement('canvas');
+            const maxWidth = 120;
+            const asciiScale = maxWidth / img.width;
+            tempCanvas.width = maxWidth;
+            tempCanvas.height = Math.floor(img.height * asciiScale * 0.5);
+            const ctx = tempCanvas.getContext('2d');
+            
+            ctx.drawImage(img, 0, 0, tempCanvas.width, tempCanvas.height);
+            const imageData = ctx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+            
+            let mask;
+            if (currentMode === 'edges') {
+                mask = detectEdges(imageData, edgeThreshold);
+            } else {
+                mask = colorMatch(imageData, bgColor, colorTolerance);
+            }
+            
+            // Show preview
+            processedCanvas.width = originalCanvas.width;
+            processedCanvas.height = originalCanvas.height;
+            const processedCtx = processedCanvas.getContext('2d');
+            processedCtx.drawImage(img, 0, 0, processedCanvas.width, processedCanvas.height);
+            
+            const previewData = processedCtx.getImageData(0, 0, processedCanvas.width, processedCanvas.height);
+            const scaleX = previewData.width / tempCanvas.width;
+            const scaleY = previewData.height / tempCanvas.height;
+            
+            for (let y = 0; y < previewData.height; y++) {
+                for (let x = 0; x < previewData.width; x++) {
+                    const srcX = Math.floor(x / scaleX);
+                    const srcY = Math.floor(y / scaleY);
+                    const srcIdx = srcY * tempCanvas.width + srcX;
+                    
+                    if (!mask[srcIdx]) {
+                        const idx = (y * previewData.width + x) * 4;
+                        previewData.data[idx + 3] = 0;
+                    }
+                }
+            }
+            processedCtx.putImageData(previewData, 0, 0);
+            
+            // Convert to ASCII
+            const chars = weights[currentWeight];
+            let ascii = '';
+            
+            for (let y = 0; y < tempCanvas.height; y++) {
+                for (let x = 0; x < tempCanvas.width; x++) {
+                    const offset = (y * tempCanvas.width + x) * 4;
+                    const idx = y * tempCanvas.width + x;
+                    
+                    if (!mask[idx]) {
+                        ascii += ' ';
+                    } else {
+                        const r = imageData.data[offset];
+                        const g = imageData.data[offset + 1];
+                        const b = imageData.data[offset + 2];
+                        const brightness = (r + g + b) / 3;
+                        const charIndex = Math.floor((brightness / 255) * (chars.length - 1));
+                        ascii += chars[charIndex];
+                    }
+                }
+                ascii += '\n';
+            }
+            
+            document.getElementById('asciiArt').textContent = ascii;
+            document.getElementById('resultCard').style.display = 'block';
+        }
+
+        function detectEdges(imageData, threshold) {
+            const width = imageData.width;
+            const height = imageData.height;
+            const mask = new Array(width * height).fill(false);
+            
+            // Sobel edge detection
+            const edges = new Array(width * height).fill(0);
+            
+            for (let y = 1; y < height - 1; y++) {
+                for (let x = 1; x < width - 1; x++) {
+                    let gx = 0, gy = 0;
+                    
+                    for (let ky = -1; ky <= 1; ky++) {
+                        for (let kx = -1; kx <= 1; kx++) {
+                            const idx = ((y + ky) * width + (x + kx)) * 4;
+                            const gray = (imageData.data[idx] + imageData.data[idx + 1] + imageData.data[idx + 2]) / 3;
+                            
+                            gx += gray * (kx === -1 ? -1 : kx === 1 ? 1 : 0) * (ky === 0 ? 2 : 1);
+                            gy += gray * (ky === -1 ? -1 : ky === 1 ? 1 : 0) * (kx === 0 ? 2 : 1);
+                        }
+                    }
+                    
+                    edges[y * width + x] = Math.sqrt(gx * gx + gy * gy);
+                }
+            }
+            
+            // Flood fill from edges to find subject
+            const visited = new Array(width * height).fill(false);
+            const queue = [];
+            
+            // Start from all edge pixels
+            for (let i = 0; i < edges.length; i++) {
+                if (edges[i] > threshold) {
+                    mask[i] = true;
+                    queue.push(i);
+                    visited[i] = true;
+                }
+            }
+            
+            // Expand from edges
+            while (queue.length > 0) {
+                const idx = queue.shift();
+                const x = idx % width;
+                const y = Math.floor(idx / width);
+                
+                for (let dy = -1; dy <= 1; dy++) {
+                    for (let dx = -1; dx <= 1; dx++) {
+                        if (dx === 0 && dy === 0) continue;
+                        
+                        const nx = x + dx;
+                        const ny = y + dy;
+                        if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+                            const nidx = ny * width + nx;
+                            if (!visited[nidx] && edges[nidx] > threshold / 2) {
+                                mask[nidx] = true;
+                                visited[nidx] = true;
+                                queue.push(nidx);
+                            }
+                        }
+                    }
+                }
+            }
+            
+            return mask;
+        }
+
+        function colorMatch(imageData, targetColor, tolerance) {
+            const width = imageData.width;
+            const height = imageData.height;
+            const mask = new Array(width * height).fill(true);
+            
+            for (let i = 0; i < width * height; i++) {
+                const offset = i * 4;
+                const r = imageData.data[offset];
+                const g = imageData.data[offset + 1];
+                const b = imageData.data[offset + 2];
+                
+                const distance = Math.sqrt(
+                    Math.pow(r - targetColor.r, 2) +
+                    Math.pow(g - targetColor.g, 2) +
+                    Math.pow(b - targetColor.b, 2)
+                );
+                
+                if (distance < tolerance) {
+                    mask[i] = false;
+                }
+            }
+            
+            return mask;
+        }
+
+        function downloadAsImage() {
+            const asciiText = document.getElementById('asciiArt').textContent;
+            const canvas = document.getElementById('downloadCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            const fontSize = 8;
+            const lineHeight = fontSize * 1.2;
+            const lines = asciiText.split('\n');
+            const maxLineLength = Math.max(...lines.map(line => line.length));
+            
+            canvas.width = maxLineLength * fontSize * 0.6;
+            canvas.height = lines.length * lineHeight;
+            
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = 'black';
+            ctx.font = `${fontSize}px monospace`;
+            ctx.textBaseline = 'top';
+            
+            lines.forEach((line, i) => {
+                ctx.fillText(line, 0, i * lineHeight);
+            });
+            
+            const link = document.createElement('a');
+            link.download = 'ascii-art.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+    </script>
+</body>
+</html>	
